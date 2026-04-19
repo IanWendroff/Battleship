@@ -13,17 +13,7 @@ mutex playersMutex;
 int numPlayers = 2;
 atomic<bool> gameStarted = false;
 
-
-
-
-
-/*
-TODO GOALS:
-SDL2 window shows: host's own IP, player list as players join, max player setting
-Mouse input: kick button per player, adjust max players, start game button
-On start: lock vector, send each node the full IP list + their nodeID, close lobby sockets
-
-*/
+int startGame(int numberOfNodes, vector<Player> players, int playerNodeID, int startingPlayerID);
 
 int acceptPlayers(vector<Player>& players){
     int sock = socket(AF_INET, SOCK_STREAM, 0);
@@ -214,11 +204,27 @@ int main(int argc, char **argv){
         //Send player count:
         int bytes_sent = send(players[i].socket, &numPlayers, sizeof(numPlayers), 0);
     }
+
+    int startingPlayer = -1;
+    random_device rd;
+    static thread_local mt19937 rng(rd()); //Unique for each thread
+    uniform_int_distribution<int> playerChooser(1, numPlayers); // Chooses sleep value
+
+    startingPlayer = playerChooser(rng);
+
+    for(int i = 1; i < numPlayers; i++){
+        //Send player count:
+        int bytes_sent = send(players[i].socket, &startingPlayer, sizeof(startingPlayer), 0);
+    }
     
     //Send lobby info:
     for(int i = 1; i < numPlayers; i++){
         int bytes_sent = send(players[i].socket, players.data(), numPlayers * sizeof(Player), 0);
     }
+
+
+    //Open up host game and send all player info
+    startGame(numPlayers, players, 0, startingPlayer);
 }
 
 

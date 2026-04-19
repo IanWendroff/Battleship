@@ -7,8 +7,11 @@
 #define LOBBY_PORT 6010
 using namespace std;
 
+int startGame(int numberOfNodes, vector<Player> players, int playerNodeID, int startingPlayerID);
+
 int hostSocket;
 int numPlayers;
+char name[17];
 
 int connectToHost(string hostIP){
     int sock = socket(AF_INET, SOCK_STREAM, 0);
@@ -33,7 +36,6 @@ int connectToHost(string hostIP){
     hostSocket = sock;
     cout << "Connected to Host " << endl;
     
-    char name[17];
     bool loop = true;
     cout << "Please enter display name (16 characters max):" << endl;
     while(loop){
@@ -76,4 +78,20 @@ int main(int argc, char **argv){
     if(bytes_received < 0){
         cout << "Didn't recv all players info" << endl;
     }
+
+    int startingPlayer = -1;
+    bytes_received = recv(hostSocket, &startingPlayer, sizeof(startingPlayer), MSG_WAITALL);
+    if(bytes_received < 0){
+        cout << "Didn't recv all players info" << endl;
+    }
+
+    int playerNodeID = -1;
+    //open up game and send all player info
+    for(int i = 1; i < numPlayers; i++){
+        if(strcmp(players[i].name, name){
+            playerNodeID = i;
+        }
+    }
+
+    startGame(numPlayers, players, playerNodeID, startingPlayer);
 }
