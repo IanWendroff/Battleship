@@ -1,5 +1,10 @@
 #include "lobby_message.h"
 #include <cstring>
+#include <string>
+#include <chrono>
+#include <sstream>
+#include <sys/select.h>
+
 #define LOBBY_PORT 6010
 
 
@@ -7,7 +12,14 @@ using namespace std;
 
 int sockets[4] = {-1, -1, -1, -1};
 int numNodes = 0;
-nodeID = -1;
+int nodeID = -1;
+
+int nextPlayer = -1;
+int playersLeft = -1;
+bool shipsPlaced = false;
+char board[100];
+
+atomic<bool> setupFinished = false;
 
 void acceptTo(vector<Player> players){
     int clientSock = socket(AF_INET, SOCK_STREAM, 0);
@@ -119,6 +131,13 @@ int setupMesh(int numNodes, vector<Player> players){
     }
 }
 
+int runTimer(int length){
+    startTime = chrono::system_clock::now();
+    while(chrono::duration_cast<chrono::seconds>(chrono::system_clock::now() - startTime).count() < length){
+        this_thread::sleep_for(chrono::seconds(1))
+    }
+    setupFinished = true;
+}
 
 
 
@@ -127,9 +146,93 @@ int startGame(int numberOfNodes, vector<Player> players, int playerNodeID, int s
     numNodes = numberOfNodes;
     nodeID = playerNodeID;
     sockets[0] = players[0].socket;
+    playersLeft = numberOfNodes;
     if(numNodes >= 3 && nodeID != 1){//More than 2 players
         setupMesh(numNodes, players);
     }//Otherwise the mesh is already setup
+
+    //Start the timer thread here
+    thread timer = thread(runTimer, 120);
+
+    //start the board creation 
+    struct timeval timeout;
+    timeout.tv_sec = 1;
+    timeout.tv_usec = 0;
+
+    //initialize empty board
+    for(int i = 0; i < 100; i++){
+        board[i] = '~';
+    }
+
+    fd_set read_fds;
+    FD_ZERO(&read_fds);
+    FD_SET(STDIN_FILENO, &read_fds);
+
+    while(!setupFinished && !shipsPlaced){
+        FD_ZERO(&read_fds);
+        FD_SET(STDIN_FILENO, &read_fds);
+        timeout.tv_sec = 1;
+        timeout.tv_usec = 0;
+        string shipName = "";
+        string location = "";
+        char direction = '\0';
+        int result = select(STDIN_FILENO + 1, &read_fds, NULL, NULL, timeout);
+        if(result == 0){
+            continue;
+        } else {
+            string input = getLine();
+            istringstream iss(input);
+            iss >> shipName >> location >> direction;
+
+            //TODO validate all input -- DO THIS LATER
+            
+        }
+    }
+
+
+
+    timer.join();
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    
+    //Start the game with whoever needs to with a call
+    if(startingPlayerID != playerNodeID){
+        retry:
+            int bytes_recv = recv(sockets[startingPlayerID], &nextPlayer, sizeof(nextPlayer), MSG_WAITALL);
+            if(bytes_recv <= 0){
+                goto retry;
+            }
+    } else {
+        for(int i = 0; i < numberOfNodes; i++){
+            if(i == playerNodeID){
+                continue;
+            }
+            nextPlayer = (startingPlayerID + 1) % numberOfNodes;
+            int bytes_sent = send(sockets[i], &nextPlayer)
+        }
+    }
+
+
+
 
     //Should be ready to start nwo based off all info pased
 }
