@@ -4,7 +4,7 @@
 #include <cstring>
 #include <mutex>
 
-#define LOBBY_PORT 6010
+#define LOBBY_PORT 27015
 using namespace std;
 
 int startGame(int numberOfNodes, vector<Player> players, int playerNodeID, int startingPlayerID);

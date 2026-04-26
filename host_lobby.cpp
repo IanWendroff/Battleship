@@ -6,7 +6,7 @@
 #include <limits>
 #include <atomic>
 
-#define LOBBY_PORT 6010
+#define LOBBY_PORT 27015
 using namespace std;
 
 mutex playersMutex;
@@ -151,12 +151,31 @@ int hostInput(vector<Player>& players){
     return 1;
 }
 
+void resolveHostIP(char* hostIP){
+    FILE *fp = popen("hostname -I", "r");
+    if(fp == NULL){
+        cout << "Error getting host IP" << endl;
+        hostIP[0] = '\0';
+    } else {
+        char buf[256];
+        fgets(buf, sizeof(buf), fp);
+        pclose(fp);
+        // take only the first IP (hostname -I can return multiple)
+        char* first = strtok(buf, " \t\n");
+        if(first) strncpy(hostIP, first, INET_ADDRSTRLEN - 1);
+        else hostIP[0] = '\0';
+    }
+}
+
 int main(int argc, char **argv){
 
     char hostIP[INET_ADDRSTRLEN];
-    cout << "Please enter your IP address (run 'ipconfig' on Windows or 'ip addr' on Linux): " << endl;
-    cin >> hostIP;
-    cin.ignore(numeric_limits<streamsize>::max(), '\n');
+    resolveHostIP(hostIP);
+    if(hostIP[0] == '\0'){
+        cout << "Could not detect IP. Please enter your IP address manually: " << endl;
+        cin >> hostIP;
+        cin.ignore(numeric_limits<streamsize>::max(), '\n');
+    }
 
     vector<Player> players{};
 

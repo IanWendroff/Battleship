@@ -7,7 +7,7 @@
 #include <sstream>
 #include <sys/select.h>
 
-#define LOBBY_PORT 6010
+#define LOBBY_PORT 27015
 
 using namespace std;
 
