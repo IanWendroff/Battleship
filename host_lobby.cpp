@@ -151,23 +151,12 @@ int hostInput(vector<Player>& players){
     return 1;
 }
 
-void resolveHostIP(char* hostIP){
-    FILE *fp;
-
-    fp = popen("hostname -I", "r");
-    if(fp == NULL){
-        cout << "Error getting host IP" << endl;
-    } else {
-       fgets(hostIP, INET_ADDRSTRLEN, fp);
-    }
-    pclose(fp);
-}
-
-
 int main(int argc, char **argv){
-    
+
     char hostIP[INET_ADDRSTRLEN];
-    resolveHostIP(hostIP);
+    cout << "Please enter your IP address (run 'ipconfig' on Windows or 'ip addr' on Linux): " << endl;
+    cin >> hostIP;
+    cin.ignore(numeric_limits<streamsize>::max(), '\n');
 
     vector<Player> players{};
 
