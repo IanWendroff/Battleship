@@ -403,7 +403,7 @@ void recvQuorum(int turnNode, int vote){
             totalVotes += vote;
         }
     }
-    if(totalVotes > (playersAlive/2)){
+    if(totalVotes > (playersAlive - 1) / 2){
         playersAlive--;
         boardAlive[turnNode] = false;
     }
