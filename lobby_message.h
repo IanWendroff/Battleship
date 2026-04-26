@@ -1,5 +1,5 @@
-#ifndef MESSAGE_H
-#define MESSAGE_H
+#ifndef LOBBY_MESSAGE_H
+#define LOBBY_MESSAGE_H
 
 #include <unistd.h>
 #include <vector>

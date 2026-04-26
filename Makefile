@@ -3,11 +3,11 @@ CXXFLAGS = -std=c++17 -Wall
 
 all: host join
 
-host: host_lobby.cpp
-	$(CXX) $(CXXFLAGS) -o host host_lobby.cpp
+host: host_lobby.cpp node.cpp game.cpp
+	$(CXX) $(CXXFLAGS) -o host host_lobby.cpp node.cpp game.cpp
 
-join: join_lobby.cpp
-	$(CXX) $(CXXFLAGS) -o join join_lobby.cpp
+join: join_lobby.cpp node.cpp game.cpp
+	$(CXX) $(CXXFLAGS) -o join join_lobby.cpp node.cpp game.cpp
 
 clean:
 	rm -f host join

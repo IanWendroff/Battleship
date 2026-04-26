@@ -87,8 +87,8 @@ int acceptPlayers(vector<Player>& players){
 
         Player player;
         player.nodeID = players.size();
-        strncpy(player.name, name, 16);
-        strncpy(player.ip, client_ip.c_str(), 15);
+        strncpy(player.name, name, 16); player.name[16] = '\0';
+        strncpy(player.ip, client_ip.c_str(), 15); player.ip[15] = '\0';
         player.socket = client_socket;
 
         lock_guard<std::mutex> lock(playersMutex);
@@ -185,11 +185,13 @@ int main(int argc, char **argv){
     }
     Player host;
     host.nodeID = 0;
-    strncpy(host.name, hostName, 16);
-    strncpy(host.ip, hostIP, 15);
+    strncpy(host.name, hostName, 16); host.name[16] = '\0';
+    strncpy(host.ip, hostIP, 15); host.ip[15] = '\0';
     players.push_back(host);
 
     //Make sure to initialize the og player who started the match before this
+
+    cout << "IP ADDRESS: " << host.ip << endl;
 
     //Start player looping thread and host commands thread to edit the vector:
     thread playerThread = thread(acceptPlayers, ref(players)); 
@@ -208,12 +210,11 @@ int main(int argc, char **argv){
     int startingPlayer = -1;
     random_device rd;
     static thread_local mt19937 rng(rd()); //Unique for each thread
-    uniform_int_distribution<int> playerChooser(1, numPlayers); // Chooses sleep value
+    uniform_int_distribution<int> playerChooser(0, numPlayers - 1); // Chooses starting player
 
     startingPlayer = playerChooser(rng);
 
     for(int i = 1; i < numPlayers; i++){
-        //Send player count:
         int bytes_sent = send(players[i].socket, &startingPlayer, sizeof(startingPlayer), 0);
     }
     

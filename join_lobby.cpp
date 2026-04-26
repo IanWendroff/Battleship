@@ -16,8 +16,7 @@ char name[17];
 int connectToHost(string hostIP){
     int sock = socket(AF_INET, SOCK_STREAM, 0);
     if(sock < 0){
-        cout << "SOCKETPOOL CONNECTIONS FAILED" << endl; 
-        close(sock);
+        cout << "SOCKETPOOL CONNECTIONS FAILED" << endl;
         return -1;
     }
 
@@ -72,26 +71,32 @@ int main(int argc, char **argv){
     } else {
         cout << "Total player count: " << numPlayers << endl;
     }
-
-    Player players[numPlayers];
-    bytes_received = recv(hostSocket, players, numPlayers * sizeof(Player), MSG_WAITALL);
-    if(bytes_received < 0){
-        cout << "Didn't recv all players info" << endl;
-    }
-
+    
     int startingPlayer = -1;
     bytes_received = recv(hostSocket, &startingPlayer, sizeof(startingPlayer), MSG_WAITALL);
     if(bytes_received < 0){
         cout << "Didn't recv all players info" << endl;
     }
 
+    vector<Player> players(numPlayers);
+    bytes_received = recv(hostSocket, players.data(), numPlayers * sizeof(Player), MSG_WAITALL);
+    if(bytes_received < 0){
+        cout << "Didn't recv all players info" << endl;
+    }
+
+
     int playerNodeID = -1;
     //open up game and send all player info
     for(int i = 1; i < numPlayers; i++){
-        if(strcmp(players[i].name, name){
+        if(!strcmp(players[i].name, name)){
             playerNodeID = i;
         }
     }
 
+    if(playerNodeID == -1){
+        cout << "Error: could not find own name in player list" << endl;
+        return 1;
+    }
+    players[0].socket = hostSocket;
     startGame(numPlayers, players, playerNodeID, startingPlayer);
 }
