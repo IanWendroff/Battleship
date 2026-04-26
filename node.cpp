@@ -164,6 +164,7 @@ bool updateShipHealths(int boardID) {
     boardAlive[boardID] = alive;
     if(!alive){
         cout << "Player " << names[ boardID] << " has lost all their ships" << endl;
+        playersAlive--;
     }
     return alive;
 }
@@ -334,7 +335,7 @@ int setupMesh(int numNodes, vector<Player> players){
 void runTimer(int length){
     chrono::time_point startTime = chrono::system_clock::now();
     while(!turnTaken && chrono::duration_cast<chrono::seconds>(chrono::system_clock::now() - startTime).count() < length){
-        if(chrono::duration_cast<chrono::seconds>(chrono::system_clock::now() - startTime).count() % 15 == 0){//Cannot hardcode the update time as it will be diff for turns
+        if(chrono::duration_cast<chrono::seconds>(chrono::system_clock::now() - startTime).count() % 20 == 0){//Cannot hardcode the update time as it will be diff for turns
             int timeRemaining = length - chrono::duration_cast<chrono::seconds>(chrono::system_clock::now() - startTime).count();
             cout << "\033[91m\n" << timeRemaining << " seconds remaining\033[0m" << endl;
         }
@@ -418,6 +419,10 @@ void win(){
 void handleTurns(int startNode){
     int turnNode = startNode;
     while(true){
+    if(playersAlive <= 1){
+        win();
+        return;
+    }
     Shot shot;
     bool healthCheck = true;
     turnTaken = false;
@@ -436,6 +441,10 @@ void handleTurns(int startNode){
             //Then broadcast shot
             thread timer = thread(runTimer, 60);
             string shotAttempt = "";
+            // count live targets before entering shot loop
+            int liveTargets = 0;
+            for(int i = 0; i < numNodes; i++) if(i != nodeID && boardAlive[i]) liveTargets++;
+            if(liveTargets == 0){ turnTaken = true; timedOut = false; }
             while(!turnTaken && !timedOut){
                 getline(cin, shotAttempt);
                 istringstream iss(shotAttempt);
