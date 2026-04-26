@@ -6,6 +6,7 @@
 #include <chrono>
 #include <sstream>
 #include <sys/select.h>
+#include <termios.h>
 
 #define LOBBY_PORT 27015
 
@@ -161,11 +162,11 @@ bool updateShipHealths(int boardID) {
     for (int s = 0; s < 5; s++) {
         if (shipHealths[boardID][s] > 0) { alive = true; break; }
     }
-    boardAlive[boardID] = alive;
-    if(!alive){
-        cout << "Player " << names[ boardID] << " has lost all their ships" << endl;
+    if(boardAlive[boardID] && !alive){
+        cout << "Player " << names[boardID] << " has lost all their ships" << endl;
         playersAlive--;
     }
+    boardAlive[boardID] = alive;
     return alive;
 }
 
@@ -258,19 +259,18 @@ void acceptTo(vector<Player> players){
     memset(&remote_address, 0, sizeof(address));
 
     int client_socket = accept(clientSock, (struct sockaddr *)&remote_address, &remote_addrlen);
-    //cout << "Accepted something" << endl;
     if(client_socket < 0 ){
         perror("Could not accpet");
         return;
     }
 
-    string client_ip = inet_ntoa(remote_address.sin_addr);
-    
-    for(int i = 0; i < numNodes; i++){
-        if(strcmp(players[i].ip, client_ip.c_str()) == 0){
-            sockets[i] = client_socket;
-        }
+    // recv nodeID handshake so we know which slot to assign
+    int peerID = -1;
+    recv(client_socket, &peerID, sizeof(peerID), MSG_WAITALL);
+    if(peerID >= 0 && peerID < numNodes){
+        sockets[peerID] = client_socket;
     }
+    close(clientSock);
 }
 
 void connectTo(char* ip, int nodeConnectionID){
@@ -295,6 +295,8 @@ void connectTo(char* ip, int nodeConnectionID){
         cout << "In connect loop, 1 failed connect" << endl;
     }
     sockets[nodeConnectionID] = sock;
+    // send nodeID handshake so the acceptor knows which slot to assign us
+    send(sock, &nodeID, sizeof(nodeID), 0);
     cout << "Client connected" << endl;
 
     //set timeout
@@ -343,6 +345,7 @@ void runTimer(int length){
     }
     if(!turnTaken){
         timedOut = true;
+        cout << "\033[91mTime's up!\033[0m" << endl;
     }
     setupFinished = true;
 }
@@ -564,6 +567,8 @@ void handleTurns(int startNode){
         }
     }
     turnNode = (turnNode + 1) % numNodes;
+    while(!boardAlive[turnNode]) turnNode = (turnNode + 1) % numNodes;
+    cout << "\nIt is now " << names[turnNode] << "'s turn.\n" << endl;
     } // end while
 }
 
@@ -703,6 +708,7 @@ void startGame(int numberOfNodes, vector<Player> players, int playerNodeID, int 
             shipsToPlace--;
             if(shipsToPlace <= 0){
                 shipsPlaced = true;
+                cout << "All ships placed! Waiting for other players..." << endl;
             }
             printBoard(nodeID);
             displayShipsLeft();
@@ -711,6 +717,9 @@ void startGame(int numberOfNodes, vector<Player> players, int playerNodeID, int 
 
     timer.join();
 
+    // drain any input typed during placement so it doesn't bleed into the turn loop
+    tcflush(STDIN_FILENO, TCIFLUSH);
+
     //Start the board sharing here:
     //Spin up 2 threads
     thread boardSend = thread(sendBoard);
@@ -718,6 +727,13 @@ void startGame(int numberOfNodes, vector<Player> players, int playerNodeID, int 
 
     boardSend.join();
     boardRecv.join();
+
+    // mark any player whose board arrived empty as dead
+    for(int i = 0; i < numNodes; i++){
+        if(i != nodeID) updateShipHealths(i);
+    }
+
+    cout << "\nShip placement complete! It is " << names[startingPlayerID] << "'s turn first.\n" << endl;
 
     //Start turns now
     handleTurns(startingPlayerID);

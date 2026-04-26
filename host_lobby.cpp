@@ -152,19 +152,14 @@ int hostInput(vector<Player>& players){
 }
 
 void resolveHostIP(char* hostIP){
-    FILE *fp = popen("hostname -I", "r");
-    if(fp == NULL){
-        cout << "Error getting host IP" << endl;
-        hostIP[0] = '\0';
-    } else {
-        char buf[256];
-        fgets(buf, sizeof(buf), fp);
-        pclose(fp);
-        // take only the first IP (hostname -I can return multiple)
-        char* first = strtok(buf, " \t\n");
-        if(first) strncpy(hostIP, first, INET_ADDRSTRLEN - 1);
-        else hostIP[0] = '\0';
-    }
+    FILE* fp = popen("hostname -I", "r");
+    if(fp == NULL){ hostIP[0] = '\0'; return; }
+    char buf[256];
+    fgets(buf, sizeof(buf), fp);
+    pclose(fp);
+    char* first = strtok(buf, " \t\n\r");
+    if(first) strncpy(hostIP, first, INET_ADDRSTRLEN - 1);
+    else hostIP[0] = '\0';
 }
 
 int main(int argc, char **argv){
@@ -172,7 +167,7 @@ int main(int argc, char **argv){
     char hostIP[INET_ADDRSTRLEN];
     resolveHostIP(hostIP);
     if(hostIP[0] == '\0'){
-        cout << "Could not detect IP. Please enter your IP address manually: " << endl;
+        cout << "Could not detect IP. Please enter manually: " << endl;
         cin >> hostIP;
         cin.ignore(numeric_limits<streamsize>::max(), '\n');
     }
