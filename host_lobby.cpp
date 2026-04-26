@@ -6,7 +6,7 @@
 #include <limits>
 #include <atomic>
 
-#define LOBBY_PORT 27015
+#define LOBBY_PORT 6010
 using namespace std;
 
 mutex playersMutex;

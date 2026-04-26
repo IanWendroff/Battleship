@@ -8,7 +8,7 @@
 #include <sys/select.h>
 #include <termios.h>
 
-#define LOBBY_PORT 27015
+#define LOBBY_PORT 6010
 
 using namespace std;
 
