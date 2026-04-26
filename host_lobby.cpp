@@ -105,6 +105,10 @@ int hostInput(vector<Player>& players){
     int loop = 1;
     string hostCommand;
     string name;
+    cout << "Host commands:\n"
+            "  s          - Start the game\n"
+            "  c <number> - Change max player count (2-4)\n"
+            "  k <name>   - Kick a player\n";
     while(loop == 1){
         getline(cin, hostCommand);
         if(hostCommand[0] == 'k'){ // Kick player, "k {name}"

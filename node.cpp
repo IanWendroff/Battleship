@@ -445,6 +445,8 @@ void handleTurns(int startNode){
             thread timer = thread(runTimer, 60);
             string shotAttempt = "";
             // count live targets before entering shot loop
+            cout << "It's your turn! Format: <player name> <column><row>\n"
+                    "Example: Alice B3\n";
             int liveTargets = 0;
             for(int i = 0; i < numNodes; i++) if(i != nodeID && boardAlive[i]) liveTargets++;
             if(liveTargets == 0){ turnTaken = true; timedOut = false; }
@@ -594,7 +596,12 @@ void startGame(int numberOfNodes, vector<Player> players, int playerNodeID, int 
     printBoard(nodeID);
     displayShipsLeft();
     cout << "Ships are placed using an anchor point (the gold cell, bottom-left of the shape).\n"
-            "When you specify a location, the anchor will be placed there.\n";
+            "When you specify a location, the anchor will be placed there.\n"
+            "Format: <ship number> <column><row> <direction>\n"
+            "  Ship number: 1-5\n"
+            "  Column: A-J, Row: 0-9  (e.g. A0, C4)\n"
+            "  Direction: N, S, E, W\n"
+            "Example: 1 A0 E\n";
     //Start the timer thread here
     thread timer = thread(runTimer, 120);
 
